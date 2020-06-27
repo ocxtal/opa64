@@ -120,7 +120,7 @@ def fetch_file(url, base = '.', verify = True):
 	try:
 		fetch_file_intl(url, verify)
 	except(requests.exceptions.SSLError):
-		message('certificate verify failed. trying again without verification...')
+		message('certificate verification failed. trying again without verification...')
 		fetch_file_intl(url, False)
 	time.sleep(1)
 	return(path)
