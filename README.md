@@ -3,18 +3,18 @@
 
 *— [developer.arm.com](developer.arm.com)に混じりてopを取りつつよろづのことに使ひけり —*
 
-![screenshot comes here](/Users/suzukihajime/docs/src/opa64/screenshot.png)
+![screenshot comes here](./screenshot.png)
 
 ## Running in Docker
 
-The following commands set up server at `http://localhost:8080/`.  `<path/to/db>` can be anywhere you want to save pdfs and database. On first launch `docker run` attempts to fetch the pdfs and build the database there, before starting the server. It would take a bit long, ~16min on Neoverse-N1@2.3GHz and ~20min on Broadwell-U@2.2GHz.
+The following commands set up server at `http://localhost:8080/`.  `<path/to/db>` can be any directory outside the container where you want to save pdfs and database. Inside the container, the server script supposes the database is located at `/data`, so the path mapping would be like `-v $(pwd)/data:/data`, for example. On first launch, or more precisely if the database not found in `/data `, the script attempts to build it before starting the server. It would take a bit long, ~16min on Neoverse-N1@2.3GHz and ~20min on Broadwell-U@2.2GHz.
 
 ```
 $ docker build -t opa64server .
-$ docker run -it -v "$PWD":<path/to/db> -p 8080:8080 opa64server
+$ docker run -it -v <path/to/db>:/data -p 8080:8080 opa64server
 ```
 
-*(You might see SSL warnings on fetching the documents. The resulting docker image would be so huge due to the dependencies.)*
+*(You might see SSL warnings on fetching the documents.)*
 
 ## Running without Container
 
@@ -27,13 +27,13 @@ $ docker run -it -v "$PWD":<path/to/db> -p 8080:8080 opa64server
 
 ### Run
 
-`make db` builds the database in `docs` directory and `make run` starts server at `http://localhost:8080/`.
+`make db` builds the database in `data` directory and `make run` starts server at `http://localhost:8080/`.
 
 ```bash
 $ make db
-python3 runner.py fetch --doc=all --dir=docs
-python3 runner.py parse --doc=all --dir=docs > docs/db.json
-python3 runner.py split --db docs/db.json > docs/db.split.json
+python3 runner.py fetch --doc=all --dir=data
+python3 runner.py parse --doc=all --dir=data > data/db.raw.json
+python3 runner.py split --db data/db.raw.json > data/db.json
 $ make run
 python3 -m http.server 8080
 ```
