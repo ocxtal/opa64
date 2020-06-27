@@ -1,12 +1,18 @@
 
-DIR    = ./docs
-DB_RAW = $(DIR)/db.raw.json
-DB     = $(DIR)/db.json
+# document (pdfs and xmls) directory
+DIR    = ./data
 
+# parsed json
+DB_DIR = $(DIR)
+DB_RAW = $(DB_DIR)/db.raw.json
+DB     = $(DB_DIR)/db.json
+
+# js, python, and makefile
 SCRIPT_DIR = .
 SCRIPT     = opa64.py
 
 PYTHON3 = python3
+
 
 $(DB_RAW):
 	$(PYTHON3) $(SCRIPT_DIR)/$(SCRIPT) fetch --doc=all --dir=$(DIR)
