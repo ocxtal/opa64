@@ -1,0 +1,240 @@
+
+body {
+  font-family: 'arial', sans-serif;
+  margin-top: 8px;
+  margin-left: 40px;
+  margin-right: 40px;
+}
+.opv86-main-hex-input {
+  font-family: 'Source Code Pro', monospace;
+  font-size: 24px;
+  width: 100%;
+  border: 0px;
+  border-bottom: 2px solid #808080;
+  padding-bottom: 8px;
+  margin-bottom: 8px;
+}
+.opv86-main-hex-input:focus {
+  outline: 0;
+}
+h1 small {
+  color: #808080;
+}
+a {
+  color: #1d68cd;
+  text-decoration: none;
+}
+a:visited {
+  color: #1d68cd;
+}
+
+.opv86-data-info {
+  text-align: right;
+  margin-bottom: 8px;
+}
+.opv86-site-info {
+  text-align: right;
+  margin-bottom: 8px;
+}
+.opv86-oplist-container {
+  display: grid;
+}
+
+.opv86-oplist-header {
+  display: grid;
+  grid-template-columns: 150px 150px 20px 150px 15px 0.45fr 15px 0.55fr;
+  background-color: #eeeeee;
+  border: 0px;
+  border-bottom: 2px solid #808080;
+}
+.opv86-header-text {
+  font-family: 'arial', sans-serif;
+  font-weight: bold;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding-top: 2px;
+  padding-bottom: 2px;
+  padding-left: 2px;
+  padding-right: 2px;
+}
+
+.opv86-op-container {
+  display: grid;
+  background-color: #ffffff;
+  border: 0px;
+  border-bottom: 1px solid #bbbbbb;
+}
+
+.opv86-brief-grid {
+  display: grid;
+  grid-template-columns: 150px 150px 20px 150px 15px 0.45fr 15px 0.55fr;
+  background-color: #ffffff;
+  /*margin-bottom: 0px;*/
+}
+
+.opv86-brief-text {
+  font-family: 'arial', sans-serif;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding-top: 1px;
+  padding-bottom: 1px;
+  padding-left: 2px;
+  padding-right: 2px;
+}
+.opv86-brief-label {
+  font-family: 'Source Code Pro', monospace;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding-top: 1px;
+  padding-bottom: 1px;
+  padding-left: 2px;
+  padding-right: 2px;
+}
+
+.opv86-details-container {
+  display: none;
+  background-color: #ffffff;
+  font-family: 'arial', sans-serif;
+  padding-left: 320px;
+  padding-right: 0px;
+}
+.opv86-details-section {
+  font-size: 18px;
+  padding-top: 15px;
+  padding-bottom: 15px;
+  padding-left: 2px;
+  padding-right: 2px;
+}
+.opv86-details-body {
+  display: grid;
+  font-size: 16px;
+  padding-top: 6px;
+  padding-bottom: 6px;
+  padding-left: 15px;
+  padding-right: 15px;
+}
+.opv86-details-pseudocode {
+  display: grid;
+  background-color: #eeeeee;
+  font-family: 'Source Code Pro', monospace;
+  font-size: 16px;
+  white-space: break-spaces;
+  padding-top: 2px;
+  padding-bottom: 2px;
+  padding-left: 6px;
+  padding-right: 0px;
+  margin-top: 4px;
+  margin-bottom: 4px;
+  margin-left: 9px;
+  margin-right: 0px;
+}
+
+.opv86-synopsis {
+  display: grid;
+  grid-template-columns: 150px auto;
+}
+.opv86-synopsis-tag {
+  font-weight: bold;
+}
+.opv86-synopsis-text {}
+.opv86-synopsis-label {
+  font-family: 'Source Code Pro', monospace;
+}
+
+.opv86-table-container {
+  display: grid;
+  grid-template-columns: minmax(500px, 1000px) auto;
+}
+.opv86-table-header {
+  display: grid;
+  grid-template-columns: 150px 0.3fr 0.2fr 0.2fr 0.2fr 0.1fr;
+  background-color: #eeeeee;
+  border: 0px;
+  border-bottom: 2px solid #808080;
+}
+.opv86-table-arch {
+  display: grid;
+  grid-template-columns: 150px auto;
+  border: 0px;
+  border-bottom: 1px solid #bbbbbb;
+}
+.opv86-table-variant-container {
+  display: grid;
+  background-color: #bbbbbb;
+  grid-row-gap: 1px;
+}
+.opv86-table-variant {
+  display: grid;
+  grid-template-columns: 0.3fr 0.2fr 0.2fr 0.2fr 0.1fr;
+  background-color: #ffffff;
+}
+.opv86-table-text {
+  padding-top: 1px;
+  padding-bottom: 1px;
+  padding-left: 2px;
+  padding-right: 2px;
+}
+
+
+
+
+.opv86-opcode-byte-prefix {
+  width: 60px;
+  height: 20px;
+  display: inline;
+  text-align: center;
+  background-color: #c0ffee;
+}
+.opv86-opcode-byte-modrm {
+  width: 60px;
+  height: 20px;
+  display: inline;
+  text-align: center;
+  background-color: #ffeec0;
+}
+.opv86-opcode-byte-imm8 {
+  grid-column: span 1;
+  height: 20px;
+  display: inline;
+  text-align: center;
+  background-color: #eeeeee;
+}
+.opv86-opcode-byte-imm16 {
+  grid-column: span 2;
+  height: 20px;
+  display: inline;
+  text-align: center;
+  background-color: #eeeeee;
+}
+.opv86-opcode-byte-imm32 {
+  grid-column: span 4;
+  height: 20px;
+  display: inline;
+  text-align: center;
+  background-color: #eeeeee;
+}
+.opv86-opcode-byte-imm64 {
+  grid-column: span 8;
+  height: 20px;
+  display: inline;
+  text-align: center;
+  background-color: #eeeeee;
+}
+.opv86-opcode-byte-normal {
+  width: 60px;
+  height: 20px;
+  display: inline;
+  text-align: center;
+  background-color: #eeffc0;
+}
+.opv86-oplist-item-opcode {
+  grid-column-start: 1;
+  background-color: #ffffff;
+
+  display: grid;
+  grid-template-columns: repeat(10, 60px);
+  column-gap: 4px;
+}
