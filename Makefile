@@ -19,7 +19,7 @@ $(DB_RAW):
 	$(PYTHON3) $(SCRIPT_DIR)/$(SCRIPT) parse --doc=all --dir=$(DIR) > $(DB_RAW)
 
 $(DB): $(DB_RAW) 
-	$(PYTHON3) $(SCRIPT_DIR)/$(SCRIPT) relink --db=$(DB_RAW) > $(DB)
+	$(PYTHON3) $(SCRIPT_DIR)/$(SCRIPT) split --db=$(DB_RAW) > $(DB)
 
 start: $(DB)
 	$(PYTHON3) -m http.server 8080 --directory=$(SCRIPT_DIR)

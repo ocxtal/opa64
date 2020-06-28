@@ -32,36 +32,13 @@ urls = {
 		# 'e1':  'https://static.docs.arm.com/swog466751/a/Neoverse_E1_Software_Optimization_Guide_1.0.pdf',
 		'a57': 'https://static.docs.arm.com/uan0015/b/Cortex_A57_Software_Optimization_Guide_external.pdf',
 		'a55': 'https://static.docs.arm.com/epm128372/30/arm_cortex_a55_software_optimization_guide_v3.pdf'
-	}
-	# 'macros': 'https://static.docs.arm.com/101028/0010/ACLE_2019Q4_release-0010.pdf'
+	},
+	'macros': 'https://static.docs.arm.com/101028/0011/ACLE_Q2_2020_101028_Final.pdf'
 }
+macro_page_range = '34-39'			# make sure the range covers entire list of feature macros
 
 
-# logger
-starttime = time.monotonic()
-def message(msg):
-	sys.stderr.write('[{:08.3f}] {}\n'.format(time.monotonic() - starttime, msg))
-	return
-
-def error(msg):
-	message('error: {}'.format(msg))
-	return
-
-
-# utils
-def to_filename(url, base):
-	return(base + '/' + url.split('/')[-1])
-
-def canonize_doc_list(docs):
-	doc_str = ','.join(docs)
-	return([x.split('.') for x in doc_str.split(',')])
-
-def build_doc_list():
-	def iterate_items(e):
-		if type(e) is str: return([[e]])
-		return(sum([[[k] + x for x in iterate_items(v)] for k, v in e.items()], []))
-	return(['.'.join(x[:-1]) for x in iterate_items(urls)])
-
+# canonize opcode for use as matching tags
 def canonize_opcode(op_raw):
 	fallback = {
 		'vmov':      'xtn',
@@ -103,11 +80,66 @@ def canonize_opcode(op_raw):
 	if op_raw in fallback: return(fallback[op_raw])
 	return(re.split(r'[0-9\W\.]+', op_raw.strip('0123456789 '))[0])
 
+# __ARM_FEATURE tag -> "ARMv8.n.<feature>" conversion
+feature_abbrev = {
+	'crc32': 'crc',
+	'sha2':  'sha2',
+	'sha3':  'sha3',
+	'sm3':   'sm3',
+	'sm4':   'sm4',
+	'bf16':  'bf16',
+	'fp16':  { 'scalar': 'fp16', 'fml': 'fhm' },
+	'qrdmx': 'rdma',
+	'jcvt':  'jconv',
+	'dotprod': 'dotprod',
+	'complex': 'compnum',
+	'matmul':  'i8mm',
+	'frint':   'frint'
+}
+
+
+
+
+# logger
+starttime = time.monotonic()
+def message(msg):
+	sys.stderr.write('[{:08.3f}] {}\n'.format(time.monotonic() - starttime, msg))
+	return
+
+def error(msg):
+	message('error: {}'.format(msg))
+	return
+
+
+
+
+# utils
+def to_filepath(url, base):
+	return(base + '/' + url.split('/')[-1])
+
+def extract_filename(path):
+	return(path.split('/')[-1])
+
+def extract_base(path):
+	return('/'.join(path.split('/')[:-1]))
+
+def canonize_doc_list(docs):
+	doc_str = ','.join(docs)
+	return([x.split('.') for x in doc_str.split(',')])
+
+def build_doc_list():
+	def iterate_items(e):
+		if type(e) is str: return([[e]])
+		return(sum([[[k] + x for x in iterate_items(v)] for k, v in e.items()], []))
+	return(['.'.join(x[:-1]) for x in iterate_items(urls)])
+
+
+
 
 # fetch
 def fetch_file(url, base = '.', verify = True):
 	# check the directory where pdf might have been saved already
-	path = to_filename(url, base)
+	path = to_filepath(url, base)
 	if os.path.exists(path): return(path)
 
 	# if not, download it
@@ -126,11 +158,10 @@ def fetch_file(url, base = '.', verify = True):
 	return(path)
 
 
+
+
 # parse
 def parse_insn_table(path, page_range = 'all'):
-	# load table
-	table = camelot.read_pdf(path, pages = page_range)
-
 	# I suppose all opcodes appear in the table is in the canonical form. so no need for canonizing them.
 	def parse_opcodes(ops_str):
 		def parse_paren(ops_str):
@@ -154,9 +185,12 @@ def parse_insn_table(path, page_range = 'all'):
 	def parse_variant(var_str):
 		return([x.strip(' ') for x in var_str.split(',')])
 
+	# load table
+	tables = camelot.read_pdf(path, pages = page_range)
+
 	# parse table into opcode -> (form, latency, throughput, pipes, notes) mappings
 	insns = dict()
-	for t in table:
+	for t in tables:
 		df = t.df.applymap(lambda x: x.translate(conv_singleline).lower())
 		if not df[0][0].startswith('instruction'): continue
 		if not df[1][0].startswith('aarch64'): continue
@@ -173,14 +207,16 @@ def parse_insn_table(path, page_range = 'all'):
 				'latency':    r[2],
 				'throughput': r[3],
 				'pipes':      r[4],
-				'notes':      r[5]
+				'notes':      r[5],
+				'page':    t.page
 			})
-	return(insns)
+	meta = { 'path': path }
+	return({ 'metadata': meta, 'insns': insns })
+
+
+
 
 def parse_intrinsics(path, page_range = 'all'):
-	# load table
-	table = camelot.read_pdf(path, pages = page_range)
-
 	# reconstruct instruction sequence from joined string
 	def recompose_sequence(asm_str):
 		(parts, delims) = (asm_str.split(' '), '+-*/(){}[]')
@@ -274,9 +310,12 @@ def parse_intrinsics(path, page_range = 'all'):
 		(form, datatypes) = infer_inout_form(intr_str, seq_canon)
 		return(op_canon, op_raw, form, datatypes)
 
-	# parse table into opcode -> (intrinsic, arguments, mnemonic, result) mappings
+	# load table
+	tables = camelot.read_pdf(path, pages = page_range)
+
+	# parse table into opcode -> (intrinsics, arguments, mnemonic, result) mappings
 	insns = dict()
-	for t in table:
+	for t in tables:
 		# print(t.df)
 		df = t.df.applymap(lambda x: x.translate(conv_singleline).lower())
 		if not df[0][0].startswith('intrinsic'): continue
@@ -289,19 +328,69 @@ def parse_intrinsics(path, page_range = 'all'):
 				'op_raw':    op_raw,
 				'form':      form,
 				'datatypes': datatypes,
-				'intrinsic': r[0],
-				'sequence':  [' '.join(list(x)) for x in seq_canon]
+				'intrinsics': r[0],
+				'sequence':  [' '.join(list(x)) for x in seq_canon],
+				'page':      t.page
 			})
-	return(insns)
+	meta = { 'path': path }
+	return({ 'metadata': meta, 'insns': insns })
 
 
-def parse_insn_xml(path):
+
+
+def parse_macros(path):
+	def parse_macro_intl(macro_str):
+		if not macro_str.startswith('__arm_feature_'): return(None, None)
+		tags = macro_str[len('__arm_feature_'):].split('_')
+
+		d = feature_abbrev
+		for tag in tags:
+			if tag not in d: return(None, None)
+			d = d[tag]
+			if type(d) is str: return(d, macro_str)
+		return(None, None)
+
+	# load table
+	tables = camelot.read_pdf(path, macro_page_range)
+	macros = dict()
+	for t in tables:
+		# print(t.df)
+		df = t.df.applymap(lambda x: x.translate(conv_singleline).lower())
+		if not df[0][0].startswith('macro name'): continue
+		for i, r in df.iterrows():
+			if i == 0: continue
+			(feature, macro) = parse_macro_intl(r[0])
+			if feature == None: continue
+			macros[feature] = {
+				'macro': macro,
+				'page':  t.page
+			}
+	meta = { 'path': path }
+	return({ 'metadata': meta, 'insns': macros })
+
+
+
+
+def prepare_expanded_tarfile(path):
 	tar = tarfile.open(path)
 	files = [x.name for x in filter(lambda x: x.name.endswith('.xml'), tar.getmembers())]
 	dirs  = sorted(list(set([x.split('/')[1] for x in files])))	# suppose starts with './'
-	if len(dirs) == 2 and dirs[0] + '_OPT' == dirs[1]:
-		files = list(filter(lambda x: x.startswith('./' + dirs[1]), files))
 
+	if len(dirs) != 2 or dirs[0] + '_OPT' != dirs[1]:
+		# unknown directory structure
+		return(None, None, None)
+
+	tar_intl_xml_dir = '/'.join(['.', dirs[1]])
+	files = list(filter(lambda x: x.startswith(tar_intl_xml_dir), files))
+
+	# untar directory if needed
+	if not os.path.exists(tar_intl_xml_dir):
+		tar.extractall(extract_base(path))
+
+	html_dir = '/'.join([extract_base(path), dirs[1], ''])		# use optimized-pseudocode variant
+	return(html_dir, tar, files)
+
+def parse_insn_xml(path):
 	# extract and concatenate all text under a node
 	def dump_text(nodes, remove_newlines = True):
 		def dump_text_intl(n, acc):
@@ -315,7 +404,7 @@ def parse_insn_xml(path):
 		return(re.sub(r'\s+', ' ', s) if remove_newlines else s)
 
 	def canonize_asm(asm):
-		(op_raw, operands) = tuple((asm + ' ').split(' ', 1))
+		(op_raw, operands) = tuple([x.strip(' ') for x in (asm + ' ').split(' ', 1)])
 		if operands.startswith('{2}'):
 			op_raw += '{2}'
 			operands = operands[3:]
@@ -369,8 +458,12 @@ def parse_insn_xml(path):
 	def extract_opcodes(root):
 		# priority: alias_mnemonic > mnemonic > id
 		opcodes = filter(str.isupper, re.split(r'[\W,]+', dump_text(root.findall('./heading'))))
-		return(list(set([canonize_opcode(x.lower()) for x in opcodes])))
+		opcodes = filter(lambda x: x != 'simd' and x != 'fp', [x.lower() for x in opcodes])
+		return(list(set([canonize_opcode(x) for x in opcodes])))
 
+	# extract filenames and directory for creating link
+	(dir, tar, files) = prepare_expanded_tarfile(path)
+	meta  = { 'path': path, 'htmldir': dir + 'xhtml/' }
 	insns = dict()
 	for file in files:
 		content = b''.join([x for x in tar.extractfile(file).readlines()])
@@ -380,20 +473,22 @@ def parse_insn_xml(path):
 
 		docvars = root.findall('./docvars/docvar')
 
-		# skip sve instructions as for now (they are too complex)
-		skip_list = ['sve', 'system']
+		# skip_list = ['sve', 'system']			# skip sve and system instructions if needed
+		skip_list = []
 		if functools.reduce(lambda x, y: x or y.attrib['value'].lower() in skip_list, docvars, False): continue
 
 		for op in extract_opcodes(root):
 			if op not in insns: insns[op] = []
 			insns[op].append({
-				'file': file,
+				'file':  extract_filename(file).replace('.xml', '.html'),
 				'attrs': parse_attributes(root),
 				'brief': dump_text(root.findall('./desc/brief')),
 				'desc': ' '.join([dump_text(root.findall(k)) for k in ['./desc/description', './desc/authored']]),
 				'operation': dump_text(root.findall('./ps_section'), False)
 			})
-	return(insns)
+	return({ 'metadata': meta, 'insns': insns })
+
+
 
 
 # fetch -> parse -> concatenate
@@ -420,49 +515,109 @@ def parse_one(doc, base = '.'):
 		error('unknown document specifier: --doc={}'.format(doc[0]))
 		return(None)
 
-	def to_filename_with_check(url, base):
-		path = to_filename(url, base)
+	def to_filepath_with_check(url, base):
+		path = to_filepath(url, base)
 		if not os.path.exists(path):
 			error('file not found: {} (might be \'--dir\' missing or wrong)'.format(path))
 			return(None)
 		return(path)
 
 	if type(urls[doc[0]]) is str:
-		fn = parse_insn_xml if doc[0] == 'description' else parse_intrinsics
-		path = to_filename_with_check(urls[doc[0]], base)
+		fnmap = {
+			'description': parse_insn_xml,
+			'intrinsics':  parse_intrinsics,
+			'macros':      parse_macros
+		}
+		if doc[0] not in fnmap: return(None)
+		fn   = fnmap[doc[0]]
+		path = to_filepath_with_check(urls[doc[0]], base)
 		return(fn(path) if path != None else None)
 
 	if len(doc) == 1 or doc[1] not in urls[doc[0]]:
 		error('second specifier needed for --doc=table, one of [\'a78\', \'a77\', \'a76\', \'n1\', \'a75\', \'a72\', \'a57\', \'a55\']')
 		return(None)
-	path = to_filename_with_check(urls[doc[0]][doc[1]], base)
+	path = to_filepath_with_check(urls[doc[0]][doc[1]], base)
 	return(parse_insn_table(path) if path != None else None)
 
 def parse_all(doc_list, base = '.'):
 	docs = canonize_doc_list(doc_list)
 	if len(docs) == 1: return(parse_one(docs[0], base))
 
-	insns = dict()
-	def update_dict(dic, ks, v):
-		if len(ks) == 1:
-			dic[ks[0]] = v
+	def update_db(db, doc, db_ret):
+		def update_dict(dic, ks, v):
+			if len(ks) == 1:
+				dic[ks[0]] = v
+				return(dic)
+			if ks[0] not in dic: dic[ks[0]] = dict()
+			dic[ks[0]] = update_dict(dic[ks[0]], ks[1:], v)
 			return(dic)
-		if ks[0] not in dic: dic[ks[0]] = dict()
-		dic[ks[0]] = update_dict(dic[ks[0]], ks[1:], v)
-		return(dic)
 
+		for k, v in db_ret.items(): db = update_dict(db, [k] + doc, v)
+		return(db)
+
+	def update_feature_macro(insns, unused, macros):
+		for insn in insns:
+			if 'description' not in insns[insn]: continue
+			descs = insns[insn]['description']
+			for i in range(len(descs)):
+				attrs = descs[i]['attrs']
+				for j in range(len(attrs)):
+					if 'feature' not in attrs[j]: continue
+					tag = attrs[j]['feature'].split('-')[-1]
+					if tag not in macros: continue
+					attrs[j]['macro'] = macros[tag]
+				descs[i]['attrs'] = attrs
+			insns[insn]['description'] = descs
+		return(insns)
+
+	meta  = dict()
+	insns = dict()
 	for doc in docs:
 		doc_str = '.'.join(doc)
 		cmd = '{} {} parse --doc={} --dir={}'.format(sys.executable, os.path.realpath(sys.argv[0]), doc_str, base)
 		message('parsing {}... (command: {})'.format(doc_str, cmd))
 		ret = subprocess.run(cmd, shell = True, capture_output = True)
-		ops = json.loads(ret.stdout)
-		for k, v in ops.items(): insns = update_dict(insns, [k] + doc, v)
-	return(insns)
+		db  = json.loads(ret.stdout)
+
+		# update metadata db
+		meta = update_db(meta, doc, db['metadata'])
+
+		# update instruction db
+		fn = update_db if doc[0] != 'macros' else update_feature_macro
+		insns = fn(insns, doc, db['insns'])
+	return({ 'metadata': meta, 'insns': insns })
 
 
-# relink (reorder) database
-def filter_descs_and_tables(intr, descs, tables):
+
+
+# split (reorder) database
+def merge_attrs(op_canon, attrs):
+	def is_op_in_asm(op_canon, attrs):
+		if 'asm' not in attrs: return(False)
+		ops = [canonize_opcode(x.split(' ')[0]) for x in attrs['asm']]
+		return(op_canon in ops)
+
+	def merge_attrs_core(attr, a):
+		for k in a:
+			if k not in attr:
+				attr[k] = a[k]
+				continue
+			if k in attr and attr[k] == a[k]: continue
+			if type(attr[k]) is str:
+				attr[k] += ', ' + a[k]		# string
+			else:
+				attr[k] += a[k]				# list
+		return(attr)
+
+	attrs_filtered = list(filter(lambda x: is_op_in_asm(op_canon, x), attrs))
+	if len(attrs_filtered) > 0: attrs = attrs_filtered
+
+	attr = attrs[0]
+	for a in attrs[1:]: attr = merge_attrs_core(attr, a)
+	# print(attr)
+	return(attr)
+
+def filter_descs_and_tables(op_canon, intr, descs, tables):
 	def filter_descs_by_form(intr, descs):
 		def revmap_core(form):
 			return(form.translate(str.maketrans({ 'v': 's', 'r': 's' })))
@@ -500,6 +655,7 @@ def filter_descs_and_tables(intr, descs, tables):
 		def combine_form(x):
 			return([x, x[1:], x[0] + x, x[0] + x[0] + x, x[0] + x[0] + x[0] + x, x + 'wea'])
 
+		# for debugging
 		def print_descs(i, j, form, fds):
 			ds = [(
 				form,
@@ -517,7 +673,7 @@ def filter_descs_and_tables(intr, descs, tables):
 			for d in ds: print(i, j, d)
 			return
 
-		# print('start filtering')
+		if 'form' not in intr or len(intr['form']) == 0: return(None)
 		for form in combine_form(intr['form']):
 			for i, fn1 in enumerate(fn1s):
 				filtered_descs = sum([[{ 'desc': d, 'attr': a } for a in d['attrs']] for d in descs], [])
@@ -527,8 +683,9 @@ def filter_descs_and_tables(intr, descs, tables):
 					# print_descs(i, j + 1, form, filtered_descs)
 					if len(filtered_descs) == 0: break
 					if len(filtered_descs) == 1: return(filtered_descs[0])
-
 		return(None)
+
+		# for debugging
 		print('failed filtering')
 		for d in descs:
 			for a in d['attrs']:
@@ -542,23 +699,8 @@ def filter_descs_and_tables(intr, descs, tables):
 		iclass = canon_class[attr['instr-class']]
 		return(list(filter(lambda x: x['iclass'] == iclass, tables)))
 
-	def merge_attrs(attrs):
-		def merge_attrs_core(attr, a):
-			for k in a:
-				if k not in attr:
-					attr[k] = a[k]
-					continue
-				if k in attr and attr[k] == a[k]: continue
-				attr[k] += a[k]
-			return(attr)
-
-		attr = attrs[0]
-		for a in attrs[1:]: attr = merge_attrs_core(attr, a)
-		# print(attr)
-		return(attr)
-
 	# check form available in intrinsics, impossible to filter descriptions if none
-	if 'form' not in intr: return([({ 'desc': d, 'attr': merge_attrs(d['attrs']) }, tables) for d in descs])
+	if 'form' not in intr: return([({ 'desc': d, 'attr': merge_attrs(op_canon, d['attrs']) }, tables) for d in descs])
 
 	# first try filtering descriptions by form
 	filtered_descs = filter_descs_by_form(intr, descs)
@@ -568,79 +710,131 @@ def filter_descs_and_tables(intr, descs, tables):
 	filtered_table = dict([(proc, filter_tables_by_form(filtered_descs['attr'], tables[proc])) for proc in tables])
 	return([(filtered_descs, filtered_table)])
 
-def relink_insns(filename):
-	def find_or(d, k, o):
+def split_insns(filename):
+	def find_or(d, k, o = ''):
 		return(d[k] if k in d else o)
+
+	def copy_as(dst, dkey, src, skey):
+		if skey not in src: return(dst)
+		dst[dkey] = src[skey]
+		return(dst)
 
 	def compose_brief(op_canon, intr, desc):
 		brief = {
-			'Instruction Class': find_or(desc['attr'], 'instr-class', ''),
-			'Feature':           find_or(desc['attr'], 'feature', ''),
-			'Opcode':            find_or(intr, 'op_raw', op_canon),
-			'Intrinsics':        find_or(intr, 'intrinsic', ''),
-			'Assembly':          find_or(desc['attr'], 'asm', ''),
-			'Equivalent to':     find_or(desc['attr'], 'equiv', ''),
-			'Condition setting': find_or(desc['attr'], 'cond-setting', ''),
-			'Source':            find_or(desc['desc'], 'file', '')
+			'ic': find_or(desc['attr'], 'instr-class'),
+			'ft': find_or(desc['attr'], 'feature'),
+			'op': find_or(intr, 'op_raw', op_canon),
+			'it': find_or(intr, 'intrinsics')
 		}
+		brief = copy_as(brief, 'ip', intr, 'page')
+		brief = copy_as(brief, 'mc', desc['attr'], 'macro')
+		brief = copy_as(brief, 'as', desc['attr'], 'asm')
+		brief = copy_as(brief, 'eq', desc['attr'], 'equiv')
+		brief = copy_as(brief, 'cs', desc['attr'], 'cond-setting')
+		brief = copy_as(brief, 'rf', desc['desc'], 'file')
 		return(brief)
 
 	def compose_description(op_canon, intr, desc):
 		description = {
-			'brief':     find_or(desc['desc'], 'brief', ''),
-			'detailed':  find_or(desc['desc'], 'desc', ''),
-			'operation': find_or(desc['desc'], 'operation', '')
+			'bf': find_or(desc['desc'], 'brief'),
+			'dt': find_or(desc['desc'], 'desc'),
+			'or': find_or(desc['desc'], 'operation')
 		}
 		return(description)
+
+	def compose_tables(ts):
+		def compose_table(t, com):
+			table = {
+				# 'op': find_or(t, 'op_raw'),
+				'vr': list(filter(lambda x: x not in com, find_or(t, 'variant', []))),
+				'lt': find_or(t, 'latency'),
+				'tp': find_or(t, 'throughput'),
+				'ip': find_or(t, 'pipes'),
+				'pp': find_or(t, 'page'),
+			}
+			return(table)
+
+		if len(ts) == 0: return(ts)
+		all    = set(sum([x['variant'] for x in sum([v for v in ts.values()], [])], []))
+		common = functools.reduce(lambda x, y: x & set(y['variant']), sum([v for v in ts.values()], []), all)
+
+		tables = dict()
+		for k, ts in ts.items(): tables[k] = [compose_table(t, common) for t in ts]
+		return(tables)
 
 	def compose_blank(op_canon, intr):
 		# print('blank', op_canon)
 		# print(intr)
-		return([{
-			'brief': {
-				'Instruction Class': 'advsimd' if op_canon in ['zip', 'uzp', 'trn'] else 'unknown',
-				'Feature':    '',
-				'Opcode':     find_or(intr, 'op_raw', op_canon),
-				'Intrinsics': find_or(intr, 'intrinsic', ''),
-				'Assembly':   find_or(intr, 'sequence', '')
-			},
-			'description': { 'brief': '', 'detailed': '', 'operation': '' },
-			'table': []
-		}])
+		brief = {
+			'ic': 'advsimd' if op_canon in ['zip', 'uzp', 'trn'] else 'unknown',
+			'ft': '',
+			'op': find_or(intr, 'op_raw', op_canon),
+			'it': find_or(intr, 'intrinsics'),
+		}
+		brief = copy_as(brief, 'ip', intr, 'page')
+		brief = copy_as(brief, 'as', intr, 'sequence')
+		return({
+			'bf': brief,
+			'ds': { 'bf': '', 'dt': '', 'or': '' },
+			'tb': []
+		})
 
-	def relink_insns_intl(op_canon, v):
+	def split_insns_intl(op_canon, v):
 		if op_canon == '': return([])
 
 		tables = v['table'] if 'table' in v else dict()
 		intrs  = v['intrinsics'] if 'intrinsics' in v else [dict()]
 
-		if 'description' not in v: return(sum([compose_blank(op_canon, i) for i in intrs], []))
+		if 'description' not in v: return([compose_blank(op_canon, i) for i in intrs])
 
 		# for each instruction class
 		descs = v['description']
+		for i in range(len(descs)): descs[i]['index'] = i
+
 		insns = []
-		for i in intrs:
-			# print(op_canon, i)
-			xs = filter_descs_and_tables(i, descs, tables)
+		for intr in intrs:
+			# print(op_canon, intr)
+			xs = filter_descs_and_tables(op_canon, intr, descs, tables)
 			if xs == None: 
-				insns.extend(compose_blank(op_canon, i))
+				insns.append(compose_blank(op_canon, intr))
 				continue
 			# print('desc: ', d)
 			# print('table: ', t)
 			insns.extend([{
-				'brief': compose_brief(op_canon, i, d),
-				'description': compose_description(op_canon, i, d),
-				'table': t
-			} for d, t in xs])
+				'bf': compose_brief(op_canon, intr, d),
+				'ds': compose_description(op_canon, intr, d),
+				'tb': compose_tables(ts),
+				'index': d['desc']['index']
+			} for d, ts in xs])
+
+		# print(insns)
+		covered = set([x['index'] for x in insns if 'index' in x])
+		for i in range(len(descs)):
+			if i in covered: continue
+			d = {
+				'attr': merge_attrs(op_canon, descs[i]['attrs']),
+				'desc': descs[i]
+			}
+			insns.append({
+				'bf': compose_brief(op_canon, {}, d),
+				'ds': compose_description(op_canon, {}, d),
+				'tb': [],
+				'index': i
+			})
+		for insn in insns: insn.pop('index', None)
 		return(insns)
 
 	# read json file
+	meta  = dict()
 	insns = []
 	with open(filename) as f:
 		db = json.load(f)
-		for op, v in db.items(): insns.extend(relink_insns_intl(op, v))
-	insns.sort(key = lambda x: x['brief']['Opcode'])
-	return(insns)
+		meta = db['metadata']
+		for op, v in db['insns'].items(): insns.extend(split_insns_intl(op, v))
+	insns.sort(key = lambda x: x['bf']['op'] if 'bf' in x else '')
+	return({ 'metadata': meta, 'insns': insns })
+
+
 
 
 if __name__ == '__main__':
@@ -676,8 +870,8 @@ if __name__ == '__main__':
 		default = []
 	)
 
-	pa = sub.add_parser('relink')
-	pa.set_defaults(func = relink_insns)
+	pa = sub.add_parser('split')
+	pa.set_defaults(func = split_insns)
 	pa.add_argument('--db',
 		action  = 'store',
 		help    = 'json object generated by \'parse.py parse --doc=all\'',
@@ -685,7 +879,7 @@ if __name__ == '__main__':
 	)
 
 	args = ap.parse_args()
-	if args.func == relink_insns:
+	if args.func == split_insns:
 		ret = args.func(args.db)
 		print(json.dumps(ret))
 		exit()
@@ -698,8 +892,8 @@ if __name__ == '__main__':
 
 	# fetch_all()
 	# insns = parse_all()
-	# insns = parse_insn_table(to_filename(urls['table']['a55'], '.'))
-	# insns = parse_intrinsics(to_filename(urls['intrinsics'], '.'))
+	# insns = parse_insn_table(to_filepath(urls['table']['a55'], '.'))
+	# insns = parse_intrinsics(to_filepath(urls['intrinsics'], '.'))
 
 
 
