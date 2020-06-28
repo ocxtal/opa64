@@ -111,13 +111,15 @@ a:visited {
 .opv86-details-container {
   display: none;
   font-family: 'arial', sans-serif;
+  padding-top: 10px;
+  padding-bottom: 10px;
   padding-left: 320px;
   padding-right: 0px;
 }
 .opv86-details-section {
   font-size: 18px;
-  padding-top: 15px;
-  padding-bottom: 15px;
+  padding-top: 5px;
+  padding-bottom: 5px;
   padding-left: 2px;
   padding-right: 2px;
 }
