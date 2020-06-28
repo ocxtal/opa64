@@ -42,17 +42,18 @@ python3 -m http.server 8080
 
 The script downloads the following documents. Currently the links are maintained manually so they might be behind the latest. Fixing them by issue or pull request is always welcome.
 
-* **"Arm A64 Instruction Set Architecture" for descriptions of instructions:** https://developer.arm.com/-/media/developer/products/architecture/armv8-a-architecture/2020-03/A64_ISA_xml_v86A-2020-03.tar.gz
-* **"Arm Neon Intrinsics Reference for ACLE" for C/C++ intrinsics:** https://static.docs.arm.com/ihi0073/e/IHI0073E_arm_neon_intrinsics_ref.pdf
-* **"Software Optimization Guides" for latency & throughput tables**
-  * **A78:** https://static.docs.arm.com/102160/0300/Arm_Cortex-A78_Core_Software_Optimization_Guide.pdf
-  * **A77:** https://static.docs.arm.com/swog011050/c/Arm_Cortex-A77_Software_Optimization_Guide.pdf
-  * **A76:** https://static.docs.arm.com/swog307215/a/Arm_Cortex-A76_Software_Optimization_Guide.pdf
-  * **N1:** https://static.docs.arm.com/swog309707/a/Arm_Neoverse_N1_Software_Optimization_Guide.pdf
-  * **A75:** https://static.docs.arm.com/101398/0200/arm_cortex_a75_software_optimization_guide_v2.pdf
-  * **A72: **https://static.docs.arm.com/uan0016/a/cortex_a72_software_optimization_guide_external.pdf
-  * **A57:** https://static.docs.arm.com/uan0015/b/Cortex_A57_Software_Optimization_Guide_external.pdf
-  * **A55:** https://static.docs.arm.com/epm128372/30/arm_cortex_a55_software_optimization_guide_v3.pdf
+* **"Arm A64 Instruction Set Architecture"** for descriptions of instructions: https://developer.arm.com/-/media/developer/products/architecture/armv8-a-architecture/2020-03/A64_ISA_xml_v86A-2020-03.tar.gz
+* **"Arm C Language Extensions Documentation"** for feature macros: https://static.docs.arm.com/101028/0011/ACLE_Q2_2020_101028_Final.pdf
+* **"Arm Neon Intrinsics Reference for ACLE"** for C/C++ intrinsics: https://static.docs.arm.com/ihi0073/e/IHI0073E_arm_neon_intrinsics_ref.pdf
+* **"Software Optimization Guides"** for latency & throughput tables
+  * A78: https://static.docs.arm.com/102160/0300/Arm_Cortex-A78_Core_Software_Optimization_Guide.pdf
+  * A77: https://static.docs.arm.com/swog011050/c/Arm_Cortex-A77_Software_Optimization_Guide.pdf
+  * A76: https://static.docs.arm.com/swog307215/a/Arm_Cortex-A76_Software_Optimization_Guide.pdf
+  * N1: https://static.docs.arm.com/swog309707/a/Arm_Neoverse_N1_Software_Optimization_Guide.pdf
+  * A75: https://static.docs.arm.com/101398/0200/arm_cortex_a75_software_optimization_guide_v2.pdf
+  * A72: https://static.docs.arm.com/uan0016/a/cortex_a72_software_optimization_guide_external.pdf
+  * A57: https://static.docs.arm.com/uan0015/b/Cortex_A57_Software_Optimization_Guide_external.pdf
+  * A55: https://static.docs.arm.com/epm128372/30/arm_cortex_a55_software_optimization_guide_v3.pdf
 
 ## Copyright and License
 
