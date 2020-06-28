@@ -1,64 +1,117 @@
 
 
-
 var _windowHeight;
+var _metadata;
 var _original;
 var _filtered;
 
 
-function createSynopsisText(tag, text) {
+function highlightIntl(cls, intr_str) {
+  var s = $("<div>").addClass(cls);
+  if(intr_str.length == 0) { return(s); }
+
+  var parts  = intr_str.split(/[(),]+/).filter(function (x) { return(x != ""); });
+  var delims = Array(parts.length).fill(', ');
+  delims[0]  = '(';
+  delims[parts.length - 1] = ');';
+  parts.forEach(function (x, i) {
+    y = parts[i].trim().split(' ');
+    s.append($("<span>").addClass("opv86-code-type").text(y[0] + ' '));
+    s.append($("<span>").addClass("opv86-code-base").text(y[1] + delims[i]));
+  });
+  return(s);
+}
+
+function createIntrLink(cls, txt) {
+  var s = $("<div>").addClass(cls);
+  var pdfpath = _metadata.path.intrinsics + "#page=" + txt;
+  var fulltxt = "Intrinsics Guide p." + txt;
+  return(s.append($(`<a target="_blank" href='${pdfpath}'>${fulltxt}</a>`)));
+}
+
+function createInsnLink(cls, txt) {
+  var s = $("<div>").addClass(cls);
+  var htmlpath = _metadata.htmldir.description + txt;
+  return(s.append($(`<a target="_blank" href='${htmlpath}'>${txt}</a>`)));
+}
+
+function createText(cls, txt) {
+  return($("<div>").addClass(cls).text(txt));
+}
+
+function extractText(op, tag) {
+  var txt = op.bf[tag];
+  return(Array.isArray(txt) ? txt : [txt]);
+}
+
+function createSynopsisText(op, tag, key) {
   var tagToClass = {
-    "Opcode": "opv86-synopsis-label",
-    "Intrinsics": "opv86-synopsis-label",
-    "Assembly": "opv86-synopsis-label",
-    "Equivalent to": "opv86-synopsis-label"
+    "op": "opv86-synopsis-label",
+    "it": "opv86-synopsis-label",
+    "as": "opv86-synopsis-label",
+    "mc": "opv86-synopsis-label",
+    "eq": "opv86-synopsis-label"
   };
   var cls = tag in tagToClass ? tagToClass[tag] : "opv86-synopsis-text";
 
-  var c = $("<div>").addClass("opv86-synopsis");
-  var arr = Array.isArray(text) ? text : [text];
-  for(var i in arr.length) {
-    c.append($("<div>").addClass("opv86-synopsis-tag").text(i == 0 ? tag : ""));
-    c.append($("<div>").addClass(tagToClass[tag]).text(arr[i]));
+  var tagToFn = {
+    "it": highlightIntl,
+    "ip": createIntrLink,
+    "rf": createInsnLink
   }
+  var fn = tag in tagToFn ? tagToFn[tag] : createText;
 
-  c.append($("<div>").addClass("opv86-synopsis-tag").text(tag));
-  if(tag in tagToClass) {
-    c.append($("<div>").addClass(tagToClass[tag]).text(text));
-  } else {
-    c.append($("<div>").addClass().text(text));
-  }
-  return(c);
-}
-
-function createSynopsisLabel(tag, text) {
   var c = $("<div>").addClass("opv86-synopsis");
-  c.append($("<div>").addClass("opv86-synopsis-tag").text(tag));
-  c.append($("<div>").addClass("opv86-synopsis-label").text(text));
+  var arr = extractText(op, tag);
+  arr.forEach(function (x, i) {
+    var t = $("<div>").addClass("opv86-synopsis-tag");
+    if(i == 0) { t.text(key); }
+    c.append(t).append(fn(tagToClass[tag], x));
+  });
   return(c);
 }
 
 function createSynopsis(op) {
   var h = $("<div>").addClass("opv86-details-section").text("Synopsis");
   var b = $("<div>").addClass("opv86-details-body");
-  Object.keys(op.brief).forEach(function (x) {
-    if(op.brief[x] != "") { b.append(createSynopsisText(x, op.brief[x])); }
+
+  var tagToKeyName = {
+    "ic": "Instruction Class",
+    "ft": "Feature",
+    "op": "Opcode",
+    "it": "Intrinsics",
+    "as": "Assemblies",
+    "mc": "Feature Macro",
+    "eq": "Equivalent to",
+    "cs": "Condition Setting",
+    "rf": "References",
+    "ip": "References"
+  }
+
+  Object.keys(tagToKeyName).forEach(function (x) {
+    if(x in op.bf && op.bf[x] != "") {
+      var key = tagToKeyName[x];
+      if(x == "ip" && "rf" in op.bf) { key = ""; }
+      b.append(createSynopsisText(op, x, key));
+    }
   });
   return(h.append(b));
 }
 
 function createDescription(op) {
-  if(op.description.detailed.length == 0) { return(undefined); }
+  if(op.ds.dt.length == 0) { return(undefined); }
   var s = $("<div>").addClass("opv86-details-section").text("Description");
-  s.append($("<div>").addClass("opv86-details-body").text(op.description.detailed));
+  s.append($("<div>").addClass("opv86-details-body").text(op.ds.dt));
   return(s);
 }
 
 function createOperation(op) {
-  if(op.description.operation.length == 0) { return(undefined); }
+  if(op.ds.or.length == 0) { return(undefined); }
   var s = $("<div>").addClass("opv86-details-section").text("Operation");
-  var c = $("<div>").addClass("opv86-table-container");
-  c.append($("<div>").addClass("opv86-details-pseudocode").text(op.description.operation));
+  var c = $("<div>").addClass("opv86-details-body");
+  var t = $("<div>").addClass("opv86-table-container");
+  t.append($("<div>").addClass("opv86-details-pseudocode").text(op.ds.or));
+  c.append(t);
   s.append(c);
   return(s);
 }
@@ -69,9 +122,9 @@ function getFullArchName(arch) {
   return(arch);
 }
 
-function canonizeNotes(notes) {
-  if(notes == "-") { return(""); }
-  return(notes);
+function createTableReference(arch, page) {
+  var pdfpath = _metadata.path.table[arch];
+  return($("<div>").addClass("opv86-table-text").append($(`<a target="_blank" href='${pdfpath}#page=${page}'>p.${page}</a>`)));
 }
 
 function createTableHeader() {
@@ -81,17 +134,17 @@ function createTableHeader() {
   h.append($("<div>").addClass("opv86-header-text").text("Latency"));
   h.append($("<div>").addClass("opv86-header-text").text("Throughput"));
   h.append($("<div>").addClass("opv86-header-text").text("Pipes"));
-  h.append($("<div>").addClass("opv86-header-text").text("Notes"));
+  h.append($("<div>").addClass("opv86-header-text").text("References"));
   return(h);
 }
 
-function createTableRow(row) {
+function createTableRow(arch, row) {
   var s = $("<div>").addClass("opv86-table-variant");
-  s.append($("<div>").addClass("opv86-table-text").text(row.variant));
-  s.append($("<div>").addClass("opv86-table-text").text(row.latency));
-  s.append($("<div>").addClass("opv86-table-text").text(row.throughput));
-  s.append($("<div>").addClass("opv86-table-text").text(row.pipes));
-  s.append($("<div>").addClass("opv86-table-text").text(canonizeNotes(row.notes)));
+  s.append($("<div>").addClass("opv86-table-text").text(row.vr));
+  s.append($("<div>").addClass("opv86-table-text").text(row.lt));
+  s.append($("<div>").addClass("opv86-table-text").text(row.tp));
+  s.append($("<div>").addClass("opv86-table-text").text(row.ip));
+  s.append(createTableReference(arch, row.pp));
   return(s);
 }
 
@@ -99,17 +152,17 @@ function createTableIntl(op) {
   var table = $("<div>");
   table.append(createTableHeader());
 
-  for(var arch in op.table) {
+  for(var arch in op.tb) {
     var label = $("<div>").addClass("opv86-table-text").text(getFullArchName(arch));
     var variants = $("<div>").addClass("opv86-table-variant-container");
-    op.table[arch].forEach(function (r) { variants.append(createTableRow(r)); });
+    op.tb[arch].forEach(function (r) { variants.append(createTableRow(arch, r)); });
     table.append($("<div>").addClass("opv86-table-arch").append(label).append(variants));
   }
   return(table);
 }
 
 function createTable(op) {
-  if(Object.keys(op.table).length == 0) { return(undefined); }
+  if(Object.keys(op.tb).length == 0) { return(undefined); }
   var t = $("<div>").addClass("opv86-details-section").text("Latency & Throughput");
   t.append($("<div>").addClass("opv86-details-body").addClass("opv86-table-container").append(createTableIntl(op)));
   return(t);
@@ -162,8 +215,8 @@ function setupOnClick(s) {
 }
 
 function findBackgroundColor(op) {
-  var iclass  = op.brief['Instruction Class'];
-  var feature = op.brief['Feature'];
+  var iclass  = op.bf.ic;
+  var feature = op.bf.ft;
   if(feature.startsWith("armv8.1")) { return("#ffd1c2"); }
   if(feature.startsWith("armv8.2")) { return("#ffc2c2"); }
   if(feature.startsWith("armv8.3")) { return("#ffc2e0"); }
@@ -175,25 +228,27 @@ function findBackgroundColor(op) {
   if(iclass == "advsimd") { return("#ffeec0"); }
   if(iclass == "float") { return("#e0ffc2"); }
   if(iclass == "fpsimd") { return("#c2ffc2"); }
+  if(iclass == "sve") { return("#c2f0ff"); }
   return("#cccccc");
 }
 
 function createBrief(op, id) {
   var c = { "background-color": findBackgroundColor(op) };
   var s = $("<div>").addClass("opv86-brief-grid").attr({ "id": id });
-  s.append($("<div>").addClass("opv86-brief-text").text(op.brief['Instruction Class']).css(c));
-  s.append($("<div>").addClass("opv86-brief-text").text(op.brief['Feature']).css(c));
+
+  s.append($("<div>").addClass("opv86-brief-text").text(op.bf.ic).css(c));
+  s.append($("<div>").addClass("opv86-brief-text").text(op.bf.ft).css(c));
   s.append($("<div>").addClass("opv86-brief-text"));
-  s.append($("<div>").addClass("opv86-brief-label").text(op.brief['Opcode']));
+  s.append($("<div>").addClass("opv86-brief-label").text(op.bf.op));
   s.append($("<div>").addClass("opv86-brief-text"));
-  s.append($("<div>").addClass("opv86-brief-label").text(op.brief['Intrinsics']));
+  s.append(highlightIntl("opv86-brief-label", op.bf.it));
   s.append($("<div>").addClass("opv86-brief-text"));
-  s.append($("<div>").addClass("opv86-brief-text").text(op.description.brief));
+  s.append($("<div>").addClass("opv86-brief-text").text(op.ds.bf));
   return(setupOnClick(s));
 }
 
 
-function extendTable(oplist, data, from, to) {
+function extendOplist(oplist, data, from, to) {
   if(to > data.length) { to = data.length; }
   for(var i = from; i < to; i++) {
     var op = data[i];
@@ -212,53 +267,58 @@ function extendOnScroll() {
     var oplist = $("#oplist");
     var data = _filtered;
     var start = oplist[0].childNodes.length;
-    extendTable(oplist, data, start, start + 20);
+    extendOplist(oplist, data, start, start + 50);
   }
 }
 
-function rebuildTable(data) {
+function filterClass(op, cls) {
+  if(cls.includes("intrinsics-only") && op.bf.it == "") { return(false); }
+  if(cls.includes("general-only") && op.bf.ic != "general") { return(false); }
+  if(!cls.includes("include-sve") && op.bf.ic == "sve") { return(false); }
+  if(!cls.includes("include-system") && op.bf.ic == "system") { return(false); }
+  return(true);
+}
+
+function findKey(op, filter_word) {
+  var keys = ["ic", "ft", "op", "it"];
+  for(var k of keys) { if(op.bf[k].indexOf(filter_word) != -1) { return(true); } }
+
+  var keys_opt = ["as"];
+  for(var k of keys_opt) { if(k in op.bf && op.bf[k].indexOf(filter_word) != -1) { return(true); } }
+
+  if(op.ds.bf.toLowerCase().indexOf(filter_word) != -1) { return(true); }
+  if(op.ds.dt.toLowerCase().indexOf(filter_word) != -1) { return(true); }
+  return(false);
+}
+
+function rebuildOplist() {
   var oplist = $("#oplist");
   oplist.empty();
   oplist.append(createHeader());
 
-  var count = ($(window).height() / 30) * 5;
-  extendTable(oplist, data, 0, count);
+  var clskeys = ["intrinsics-only", "general-only", "include-sve", "include-system"];
+  var filter_cls = clskeys.filter(function (x) { return($("#" + x).is(':checked')); });
+  var filter_key = $("#filter-value").val().toLowerCase();
+
+  _filtered = _original.filter(function (x) { return(filterClass(x, filter_cls) && findKey(x, filter_key)); })
+
+  var num_recs = ($(window).height() / 30) * 5;
+  extendOplist(oplist, _filtered, 0, num_recs);
 }
 
-function findKey(op, filter_word) {
-  var keys = ["Instruction Class", "Feature", "Opcode", "Intrinsics", "Assembly"];
-  for(var k of keys) {
-    // console.log(op.brief[k]);
-    if(op.brief[k].indexOf(filter_word) != -1) { return(true); }
-  }
-  // if(is_brief_matched) { return(true); }
-  if(op.description.brief.toLowerCase().indexOf(filter_word) != -1) { return(true); }
-  if(op.description.detailed.toLowerCase().indexOf(filter_word) != -1) { return(true); }
-  // console.log(filter_word, op);
-  return(false);
-}
-
-function rebuild(filter) {
-  var filter_word = filter.toLowerCase();
-  _filtered = _original.filter(function (x) { return(findKey(x, filter_word)); });
-  rebuildTable(_filtered);
-  // console.log(_filtered);
-}
-
-function init(data) {
-  document.getElementById("filter-value").value = "";
-  _original = data;
-  _filtered = data.slice();
+function initOplist(data) {
+  $("#filter-value").val("");
+  _metadata = data.metadata;
+  _original = data.insns;
   _windowHeight = $(window).height();
-  rebuildTable(_filtered);
+  rebuildOplist();
 }
 
-// $.getJSON(`truncated.json` , function(data) {
-$.getJSON(`./data/db.json` , function(data) {
-  init(data);
-  document.getElementById("filter-value").addEventListener("keyup", function () {
-    rebuild(document.getElementById("filter-value").value);
-  });
+$.getJSON(`./data/db.json`, function(data) {
+  initOplist(data);
+
+  $("#filter-checkbox").change(function () { rebuildOplist(); });
+  $("#filter-value").keyup(function () { rebuildOplist(); });
   $(window).resize(updateHeight);
   $(window).scroll(extendOnScroll);
 });

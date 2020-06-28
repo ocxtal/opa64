@@ -17,6 +17,7 @@ body {
 .opv86-main-hex-input:focus {
   outline: 0;
 }
+
 h1 small {
   color: #808080;
 }
@@ -28,13 +29,20 @@ a:visited {
   color: #1d68cd;
 }
 
+.opv86-checkbox-row {
+  display: grid;
+  grid-template-columns: auto max-content 20px max-content;
+  margin-bottom: 20px;  
+}
+.opv86-checkbox-input {
+}
 .opv86-data-info {
   text-align: right;
   margin-bottom: 8px;
 }
 .opv86-site-info {
   text-align: right;
-  margin-bottom: 8px;
+  /*margin-bottom: 8px;*/
 }
 .opv86-oplist-container {
   display: grid;
@@ -69,10 +77,16 @@ a:visited {
 .opv86-brief-grid {
   display: grid;
   grid-template-columns: 150px 150px 20px 150px 15px 0.45fr 15px 0.55fr;
-  background-color: #ffffff;
-  /*margin-bottom: 0px;*/
 }
 
+.opv86-brief-link {
+  font-family: 'arial', sans-serif;
+  font-size: 15px;
+  padding-top: 1px;
+  padding-bottom: 3px;
+  padding-left: 6px;
+  padding-right: 2px;
+}
 .opv86-brief-text {
   font-family: 'arial', sans-serif;
   white-space: nowrap;
@@ -96,7 +110,6 @@ a:visited {
 
 .opv86-details-container {
   display: none;
-  background-color: #ffffff;
   font-family: 'arial', sans-serif;
   padding-left: 320px;
   padding-right: 0px;
@@ -120,16 +133,12 @@ a:visited {
   display: grid;
   background-color: #eeeeee;
   font-family: 'Source Code Pro', monospace;
-  font-size: 16px;
+  font-size: 13px;
   white-space: break-spaces;
-  padding-top: 2px;
-  padding-bottom: 2px;
+  padding-top: 4px;
+  padding-bottom: 4px;
   padding-left: 6px;
-  padding-right: 0px;
-  margin-top: 4px;
-  margin-bottom: 4px;
-  margin-left: 9px;
-  margin-right: 0px;
+  padding-right: 6px;
 }
 
 .opv86-synopsis {
@@ -150,7 +159,7 @@ a:visited {
 }
 .opv86-table-header {
   display: grid;
-  grid-template-columns: 150px 0.3fr 0.2fr 0.2fr 0.2fr 0.1fr;
+  grid-template-columns: 150px 0.3fr 0.2fr 0.2fr 0.15fr 0.15fr;
   background-color: #eeeeee;
   border: 0px;
   border-bottom: 2px solid #808080;
@@ -168,7 +177,7 @@ a:visited {
 }
 .opv86-table-variant {
   display: grid;
-  grid-template-columns: 0.3fr 0.2fr 0.2fr 0.2fr 0.1fr;
+  grid-template-columns: 0.3fr 0.2fr 0.2fr 0.15fr 0.15fr;
   background-color: #ffffff;
 }
 .opv86-table-text {
@@ -178,8 +187,12 @@ a:visited {
   padding-right: 2px;
 }
 
-
-
+.opv86-code-type {
+  color: #2211aa;
+}
+.opv86-code-base {
+  color: #000000;
+}
 
 .opv86-opcode-byte-prefix {
   width: 60px;
