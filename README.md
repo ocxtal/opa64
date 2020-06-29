@@ -1,7 +1,7 @@
 
 # Armv8 A64 Assembly & Intrinsics Guide Server
 
-*— [developer.arm.com](developer.arm.com)に混じりてopを取りつつよろづのことに使ひけり —*
+*— [developer.arm.com](https://developer.arm.com)に混じりてopを取りつつよろづのことに使ひけり —*
 
 ![screenshot comes here](./screenshot.png)
 
@@ -55,7 +55,11 @@ The script downloads the following documents. Currently the links are maintained
   * A57: https://static.docs.arm.com/uan0015/b/Cortex_A57_Software_Optimization_Guide_external.pdf
   * A55: https://static.docs.arm.com/epm128372/30/arm_cortex_a55_software_optimization_guide_v3.pdf
 
+## Notes
+
+This is an unofficial project providing alternative tool to [the official NEON intrinsics guide](https://developer.arm.com/architectures/instruction-sets/simd-isas/neon/intrinsics). The main difference to the official one is it collects and gives non-NEON instructions, latency & throughput tables, and links to the original (detailed) html and pdf documents. Please make sure this is an unofficial one and not intended to be used as primary information, and the parsing result is not guaranteed to be correct.
+
 ## Copyright and License
 
-Large portion of the styles and codes in `opv86.css` and `index.html`, and some lines in `opv86.js` and `Makefile` were derived from [hikalium/opv86](https://github.com/hikalium/opv86). All the others in this repository except for `jquery.min.js` were written by Hajime Suzuki (@ocxtal). Everything in this repository is licensed under MIT (as in opv64). Note that **any document or content under developer.arm.com, including static.docs.arm.com, is not allowed for redistribution** according to [the license terms of the website](https://www.arm.com/en/company/policies/terms-and-conditions#our-content).
+Large portion of the styles and codes in `opv86.css` and `index.html`, and some lines in `opv86.js` and `Makefile` were derived from [hikalium/opv86](https://github.com/hikalium/opv86). All the others in this repository except for `jquery.min.js` were written by Hajime Suzuki (@ocxtal). Everything in this repository is licensed under MIT (as in opv86). Note that **any document or content under developer.arm.com, including static.docs.arm.com, is not allowed for redistribution** according to [the license terms of the website](https://www.arm.com/en/company/policies/terms-and-conditions#our-content).
 
