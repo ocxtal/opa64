@@ -43,6 +43,12 @@ function createInsnLink(cls, txt) {
   return(s.append($(`<a target="_blank" href='${htmlpath}'>${txt}</a>`)));
 }
 
+function createMacroLink(cls, txt) {
+  var s = $("<div>").addClass(cls);
+  var pdfpath = _metadata.path.macros + "#page=" + txt.page;
+  return(s.append($(`<a target="_blank" href='${pdfpath}'>${txt.macro.toUpperCase()}</a>`)));
+}
+
 function createText(cls, txt) {
   return($("<div>").addClass(cls).text(txt));
 }
@@ -65,7 +71,8 @@ function createSynopsisText(op, tag, key) {
   var tagToFn = {
     "it": highlightIntl,
     "ip": createIntrLink,
-    "rf": createInsnLink
+    "rf": createInsnLink,
+    "mc": createMacroLink
   };
   var fn = tag in tagToFn ? tagToFn[tag] : createText;
 
