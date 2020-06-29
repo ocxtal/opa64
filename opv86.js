@@ -58,7 +58,7 @@ function createSynopsisText(op, tag, key) {
     "it": highlightIntl,
     "ip": createIntrLink,
     "rf": createInsnLink
-  }
+  };
   var fn = tag in tagToFn ? tagToFn[tag] : createText;
 
   var c = $("<div>").addClass("opv86-synopsis");
@@ -86,7 +86,7 @@ function createSynopsis(op) {
     "cs": "Condition Setting",
     "rf": "References",
     "ip": "References"
-  }
+  };
 
   Object.keys(tagToKeyName).forEach(function (x) {
     if(x in op.bf && op.bf[x] != "") {
