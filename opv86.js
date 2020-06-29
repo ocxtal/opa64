@@ -1,5 +1,13 @@
-
-
+/*
+ * @file opv86.js
+ * @brief server for opa64
+ *
+ * @author hikalium (opv86)
+ * @author Hajime Suzuki (opa64)
+ * @license MIT
+ *
+ * @detail This is a fork of opv86. See opv86 (github.com/hikalium/opv86) for the original source codes.
+ */
 var _windowHeight;
 var _metadata;
 var _original;

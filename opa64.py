@@ -1,4 +1,37 @@
-#! /usr/bin/env python
+#! /usr/bin/env python3
+"""
+@file opa64.py
+@brief fetcher and parser for Arm ISA Reference, Intrinsics Reference, and Optimization Guides
+
+@author Hajime Suzuki
+@license MIT
+
+@usage
+$ python3 opa64.py fetch --doc=all --dir=data
+$ python3 opa64.py parse --doc=all --dir=data > db.raw.json
+$ python3 opa64.py split --db=db.raw.json > db.json
+
+The `fetch` command tries to download all the documents listed below as `urls`. If the argument
+is not `--doc=all`, such as `--doc=description` where `description` comes from the keys of `urls`,
+it fetches only the document. The `--doc` option allows multiple document keys. Nested elements
+in the `urls` (= `tables`) can be specified as `table.a78`.
+
+The `parse` command parses the pdf using Camelot library. If `--doc=all` option given, it parses
+all the documents listed in `urls` and concatenate them into single json. The root of the output
+json is dict, where two keys `metadata` and `insns` are always available. The `metadata` record
+keeps metadata for the document, such as path to the pdf. The `insns` record keeps the database
+as dict where canonized opcodes are used as keys.
+
+The `split` command takes the output of the `parse` command and compute appropriate opcode-to-
+-description and opcode-to-table (latency / throughput table parsed from Optimization Guides)
+mappings. This is needed because some instructions, such as add, ld, and so on ..., have multiple
+forms and variants. Since different description and latency / throughput record is given for each
+form or variant, we have to split and link them appropriately. The output of this command is
+also json, which contains `metadata` and `insns` keys as in the `parse` result. The output of
+`split` is feeded into `opv86.js` without modification. Note that keys in `insns` record is
+converted to shorthand forms, `instr-class` -> `ic`, `feature` -> `ft`, ..., to reduce the size
+of the output.
+"""
 import argparse
 import camelot
 import functools
@@ -338,6 +371,7 @@ def parse_intrinsics(path, page_range = 'all'):
 
 
 
+# extract __ARM_FEATURE_xxx macros for C / C++, from Arm C / C++ Language Extension Spec.
 def parse_macros(path):
 	def parse_macro_intl(macro_str):
 		if not macro_str.startswith('__arm_feature_'): return(None, None)
@@ -371,6 +405,7 @@ def parse_macros(path):
 
 
 
+# extract instruction description from ISA xml files (far easier from extracting them from pdf)
 def prepare_expanded_tarfile(path):
 	tar = tarfile.open(path)
 	files = [x.name for x in filter(lambda x: x.name.endswith('.xml'), tar.getmembers())]
@@ -491,7 +526,7 @@ def parse_insn_xml(path):
 
 
 
-# fetch -> parse -> concatenate
+# fetch -> parse -> concatenate (split not here)
 def fetch_all(doc_list, base = '.'):
 	docs = canonize_doc_list(doc_list)
 	for doc in docs:
@@ -573,6 +608,10 @@ def parse_all(doc_list, base = '.'):
 	meta  = dict()
 	insns = dict()
 	for doc in docs:
+		# forks process, as workaround for a bug in ghostscript. calling some API in libgs.so,
+		# which is done inside camelot, makes `/etc/papersize` left open, and calling the API several hundred times
+		# uses up the fd resource of the operating system. to avoid this without fixing the bug is dividing parsing
+		# into multiple units and doing each in disjoint processes.
 		doc_str = '.'.join(doc)
 		cmd = '{} {} parse --doc={} --dir={}'.format(sys.executable, os.path.realpath(sys.argv[0]), doc_str, base)
 		message('parsing {}... (command: {})'.format(doc_str, cmd))
@@ -590,7 +629,7 @@ def parse_all(doc_list, base = '.'):
 
 
 
-# split (reorder) database
+# split and reorder database
 def merge_attrs(op_canon, attrs):
 	def is_op_in_asm(op_canon, attrs):
 		if 'asm' not in attrs: return(False)
