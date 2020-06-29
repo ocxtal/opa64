@@ -57,5 +57,5 @@ The script downloads the following documents. Currently the links are maintained
 
 ## Copyright and License
 
-Large portion of the styles and codes in `opa64.css` and `index.html`, and some lines in `opa64.js` and `Makefile` were derived from [hikalium/opv64](https://github.com/hikalium/opv64). All the others in this repository were written by Hajime Suzuki (@ocxtal). Everything in this repository is licensed under MIT (as in opv64). Note that **any document or content under developer.arm.com, including static.docs.arm.com, is not allowed for redistribution** according to [the license terms of the website](https://www.arm.com/en/company/policies/terms-and-conditions#our-content).
+Large portion of the styles and codes in `opa64.css` and `index.html`, and some lines in `opa64.js` and `Makefile` were derived from [hikalium/opv64](https://github.com/hikalium/opv64). All the others in this repository except for `jquery.min.js` were written by Hajime Suzuki (@ocxtal). Everything in this repository is licensed under MIT (as in opv64). Note that **any document or content under developer.arm.com, including static.docs.arm.com, is not allowed for redistribution** according to [the license terms of the website](https://www.arm.com/en/company/policies/terms-and-conditions#our-content).
 
