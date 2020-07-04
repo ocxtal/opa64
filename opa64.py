@@ -237,7 +237,7 @@ def parse_intrinsics(path, page_range = 'all'):
 		# tentative raw opcode and form parsed from the first one
 		op_raw = seq_canon[0][0]								# opcode of the first element of (opcode, operands) list
 		# if expanded sequence is complex, try extract representative from function declaration
-		if len(seq_canon) > 1:
+		if op_raw.startswith('result') or len(seq_canon) > 1:
 			op_raw = re.split(r'[\W()]+', intr_str)[1].split('_')[0]
 			if op_raw[0]  == 'v': op_raw = op_raw[1:]			# almost all function names begin with 'v'
 			if op_raw[0]  == 'q': op_raw = op_raw[1:]			# workaround for vqtbx
