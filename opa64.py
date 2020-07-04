@@ -772,7 +772,7 @@ def split_insns(filename):
 		# print('blank', op_canon)
 		# print(intr)
 		brief = {
-			'ic': 'advsimd' if op_canon in ['zip', 'uzp', 'trn'] else 'unknown',
+			'ic': 'advsimd' if op_canon in ['zip', 'uzp', 'trn', 'cmla', 'combine', 'dup'] else 'unknown',
 			'ft': '',
 			'op': find_or(intr, 'op_raw', op_canon),
 			'it': find_or(intr, 'intrinsics'),
