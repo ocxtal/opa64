@@ -1,4 +1,15 @@
 
+/**
+ * @file opv86.css
+ * @brief style classes for opv86.js, derived from opv86 (github.com/hikalium/opv86)
+ *
+ * @author hikalium (opv86)
+ * @author Hajime Suzuki (opa64)
+ * @license MIT
+ *
+ * @detail This is a fork of opv86. See opv86 (github.com/hikalium/opv86) for the original source codes.
+ */
+
 body {
   font-family: 'arial', sans-serif;
   margin-top: 8px;

@@ -1,5 +1,13 @@
-
-
+/*
+ * @file opv86.js
+ * @brief server for opa64
+ *
+ * @author hikalium (opv86)
+ * @author Hajime Suzuki (opa64)
+ * @license MIT
+ *
+ * @detail This is a fork of opv86. See opv86 (github.com/hikalium/opv86) for the original source codes.
+ */
 var _windowHeight;
 var _metadata;
 var _original;
@@ -35,6 +43,12 @@ function createInsnLink(cls, txt) {
   return(s.append($(`<a target="_blank" href='${htmlpath}'>${txt}</a>`)));
 }
 
+function createMacroLink(cls, txt) {
+  var s = $("<div>").addClass(cls);
+  var pdfpath = _metadata.path.macros + "#page=" + txt.page;
+  return(s.append($(`<a target="_blank" href='${pdfpath}'>${txt.macro.toUpperCase()}</a>`)));
+}
+
 function createText(cls, txt) {
   return($("<div>").addClass(cls).text(txt));
 }
@@ -57,8 +71,9 @@ function createSynopsisText(op, tag, key) {
   var tagToFn = {
     "it": highlightIntl,
     "ip": createIntrLink,
-    "rf": createInsnLink
-  }
+    "rf": createInsnLink,
+    "mc": createMacroLink
+  };
   var fn = tag in tagToFn ? tagToFn[tag] : createText;
 
   var c = $("<div>").addClass("opv86-synopsis");
@@ -86,7 +101,7 @@ function createSynopsis(op) {
     "cs": "Condition Setting",
     "rf": "References",
     "ip": "References"
-  }
+  };
 
   Object.keys(tagToKeyName).forEach(function (x) {
     if(x in op.bf && op.bf[x] != "") {
