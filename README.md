@@ -57,7 +57,7 @@ The script downloads the following documents. Currently the links are maintained
 
 ## Notes
 
-This is an unofficial project providing alternative tool to [the official NEON intrinsics guide](https://developer.arm.com/architectures/instruction-sets/simd-isas/neon/intrinsics). The main difference to the official one is it collects and gives non-NEON instructions, latency & throughput tables, and links to the original (detailed) html and pdf documents. Please make sure this is an unofficial one and not intended to be used as primary information, and the parsing result is not guaranteed to be correct.
+This is an unofficial project providing an alternative tool to [the official NEON intrinsics guide](https://developer.arm.com/architectures/instruction-sets/simd-isas/neon/intrinsics). The main difference to the official one is it collects and gives non-NEON instructions, latency & throughput tables, and links to the original (detailed) html and pdf documents. Please make sure this is an unofficial one and not intended to be used as primary information, and the parsing result is not guaranteed to be correct.
 
 ## Copyright and License
 
