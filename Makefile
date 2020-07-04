@@ -14,7 +14,7 @@ SCRIPT     = opa64.py
 PYTHON3 = python3
 
 
-$(DB_RAW):
+$(DB_RAW): $(SCRIPT_DIR)/$(SCRIPT)
 	$(PYTHON3) $(SCRIPT_DIR)/$(SCRIPT) fetch --doc=all --dir=$(DIR)
 	$(PYTHON3) $(SCRIPT_DIR)/$(SCRIPT) parse --doc=all --dir=$(DIR) > $(DB_RAW)
 
