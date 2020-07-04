@@ -219,12 +219,17 @@ def parse_insn_table(path, page_range = 'all'):
 def parse_intrinsics(path, page_range = 'all'):
 	# reconstruct instruction sequence from joined string
 	def recompose_sequence(asm_str):
-		(parts, delims) = (asm_str.split(' '), '+-*/(){}[]')
-		bin = [parts[0]]
+		parts  = asm_str.split(' ')
+		delims = '+-*/%=(){}[]'
+		(bin, join_more) = ([parts[0]], False)
 		for p in parts[1:]:
 			if p == '(scalar)': continue						# workaround for FABD (scalar) Hd,Hn,Hm
-			if p in delims or bin[-1][-1] in delims: bin[-1] += ' ' + p
-			else: bin.append(p)
+			if join_more or p in delims:
+				bin[-1] += ' ' + p
+				join_more = True
+			else:
+				bin.append(p)
+				join_more = False
 		return(list(zip(bin[::2], (bin[1:] + [''])[::2])))		# list of (opcode operands) pairs
 
 	# canonize opcode for use as matching tags
@@ -322,6 +327,7 @@ def parse_intrinsics(path, page_range = 'all'):
 		for i, r in df.iterrows():
 			if i == 0: continue
 			seq_canon = recompose_sequence(r[2])
+			# print(seq_canon)
 			(op_canon, op_raw, form, datatypes) = parse_op_insns(r[0], seq_canon)
 			if op_canon not in insns: insns[op_canon] = []
 			insns[op_canon].append({
@@ -329,7 +335,7 @@ def parse_intrinsics(path, page_range = 'all'):
 				'form':      form,
 				'datatypes': datatypes,
 				'intrinsics': r[0],
-				'sequence':  [' '.join(list(x)) for x in seq_canon],
+				'sequence':  [' '.join(list(x)).strip(' ') for x in seq_canon],
 				'page':      t.page
 			})
 	meta = { 'path': path }
