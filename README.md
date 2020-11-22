@@ -35,7 +35,7 @@ $ make db
 python3 opa64.py fetch --doc=all --dir=data
 python3 opa64.py parse --doc=all --dir=data > data/db.raw.json
 python3 opa64.py split --db data/db.raw.json > data/db.json
-$ make run
+$ make start
 python3 -m http.server 8080
 ```
 

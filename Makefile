@@ -13,6 +13,8 @@ SCRIPT     = opa64.py
 
 PYTHON3 = python3
 
+all: $(DB)
+db: $(DB)
 
 $(DB_RAW): $(SCRIPT_DIR)/$(SCRIPT)
 	$(PYTHON3) $(SCRIPT_DIR)/$(SCRIPT) fetch --doc=all --dir=$(DIR)
