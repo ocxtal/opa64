@@ -24,6 +24,7 @@ $ docker run -it -v <path/to/db>:/data -p 8080:8080 opa64server
   * **[Camelot](https://github.com/camelot-dev/camelot)** for parsing pdfs, available via `pip3 install camelot-py`
     * **OpenCV** and **Ghostscript** are internal dependencies of Camelot, available via `apt install python3-opencv ghostscript` for both Arm64 and x86\_64 on Ubuntu. If you are on x86\_64, you'll have some more alternative choices for OpenCV, such as `pip3 install opencv-python`.
   * **Requests** for fetching documents, available via `pip3 install requests`.
+* You might need to install **libgs** as the backend of the python ghostscript library. Available via `brew install ghostscript` on macOS or `apt install libgs-dev` on Ubuntu.
 
 ### Run
 
@@ -31,9 +32,9 @@ $ docker run -it -v <path/to/db>:/data -p 8080:8080 opa64server
 
 ```bash
 $ make db
-python3 runner.py fetch --doc=all --dir=data
-python3 runner.py parse --doc=all --dir=data > data/db.raw.json
-python3 runner.py split --db data/db.raw.json > data/db.json
+python3 opa64.py fetch --doc=all --dir=data
+python3 opa64.py parse --doc=all --dir=data > data/db.raw.json
+python3 opa64.py split --db data/db.raw.json > data/db.json
 $ make run
 python3 -m http.server 8080
 ```
