@@ -47,6 +47,7 @@ The script downloads the following documents. Currently the links are maintained
 * **"Arm C Language Extensions Documentation"** for feature macros: https://static.docs.arm.com/101028/0011/ACLE_Q2_2020_101028_Final.pdf
 * **"Arm Neon Intrinsics Reference for ACLE"** for C/C++ intrinsics: https://static.docs.arm.com/ihi0073/e/IHI0073E_arm_neon_intrinsics_ref.pdf
 * **"Software Optimization Guides"** for latency & throughput tables
+  * X1: [https://documentation-service.arm.com/static/5f15a74720b7cf4bc5247c06?token=]
   * A78: https://static.docs.arm.com/102160/0300/Arm_Cortex-A78_Core_Software_Optimization_Guide.pdf
   * A77: https://static.docs.arm.com/swog011050/c/Arm_Cortex-A77_Software_Optimization_Guide.pdf
   * A76: https://static.docs.arm.com/swog307215/a/Arm_Cortex-A76_Software_Optimization_Guide.pdf
