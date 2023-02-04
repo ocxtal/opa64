@@ -23,6 +23,6 @@ $(DB_RAW): $(SCRIPT_DIR)/$(SCRIPT)
 $(DB): $(DB_RAW) 
 	$(PYTHON3) $(SCRIPT_DIR)/$(SCRIPT) split --db=$(DB_RAW) > $(DB)
 
-start: $(DB)
+start:
 	$(PYTHON3) -m http.server 8080 --directory=$(SCRIPT_DIR)
 
