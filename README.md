@@ -5,6 +5,10 @@
 
 ![screenshot comes here](./screenshot.png)
 
+## Update 2021/10/25
+
+Arm seems to no longer publish a pdf version of the Intrinsics Guide on which this tool depends. Now that their [web version](https://developer.arm.com/architectures/instruction-sets/intrinsics/) has been updated with the latest instruction set, please refer to it.
+
 ## Running in Docker
 
 The following commands set up server at `http://localhost:8080/`.  `<path/to/db>` can be any directory outside the container where you want to save pdfs and database. Inside the container, the server script supposes the database is located at `/data`, so the path mapping would be like `-v $(pwd)/data:/data`, for example. On first launch, or more precisely if the database not found in `/data`, the script attempts to build it before starting the server. It would take a bit long, ~16min on Neoverse-N1 @2.3GHz and ~20min on Broadwell-U @2.2GHz.
